@@ -2,81 +2,28 @@
 /**
   * wechat php test
   */
-
-//define your token
-define("TOKEN", "dgzj19861989");
-//OjCl03iivylsX69XVGDly0aIw6GtiCxR2Bc1sVTPPJw
-$wechatObj = new wechatCallbackapiTest();
-$wechatObj->valid();
-
-class wechatCallbackapiTest
-{
-    public function valid()
-    {
-        $echoStr = $_GET["echostr"];
-
-        //valid signature , option
-        if($this->checkSignature()){
-            echo $echoStr;
-            exit;
-        }
-    }
-
-    public function responseMsg()
-    {
-        //get post data, May be due to the different environments
-        $postStr = $GLOBALS["HTTP_RAW_POST_DATA"];
-
-          //extract post data
-        if (!empty($postStr)){
-                
-                  $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
-                $fromUsername = $postObj->FromUserName;
-                $toUsername = $postObj->ToUserName;
-                $keyword = trim($postObj->Content);
-                $time = time();
-                $textTpl = "<xml>
-                            <ToUserName><![CDATA[%s]]></ToUserName>
-                            <FromUserName><![CDATA[%s]]></FromUserName>
-                            <CreateTime>%s</CreateTime>
-                            <MsgType><![CDATA[%s]]></MsgType>
-                            <Content><![CDATA[%s]]></Content>
-                            <FuncFlag>0</FuncFlag>
-                            </xml>";             
-                if(!empty( $keyword ))
-                {
-                      $msgType = "text";
-                    $contentStr = "Welcome to wechat world!";
-                    $resultStr = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
-                    echo $resultStr;
-                }else{
-                    echo "Input something...";
-                }
-
-        }else {
-            echo "";
-            exit;
-        }
-    }
-        
-    private function checkSignature()
-    {
-        $signature = $_GET["signature"];
-        $timestamp = $_GET["timestamp"];
-        $nonce = $_GET["nonce"];    
-                
-        $token = TOKEN;
-        $tmpArr = array($token, $timestamp, $nonce);
-        sort($tmpArr, SORT_STRING);
-        $tmpStr = implode( $tmpArr );
-        $tmpStr = sha1( $tmpStr );
-        
-        if( $tmpStr == $signature ){
-            return true;
-        }else{
-            return false;
-        }
-    }
-}
-
+	function getAccessToken(){
+		$appId = 'wx17f1b5a370764864';
+		$appKey = '2fcf935bfa434bd2d160d276e070d17a';
+		$grantType = 'client_credential';
+		if(isset($_COOKIE['accessToken'])&&$_COOKIE['accessToken']){
+			return $_COOKIE['accessToken'];
+		}else{
+			$url = 'https://api.weixin.qq.com/cgi-bin/token?grant_type='.$grantType.'&appid='.$appId.'&secret='.$appKey;
+		$result = file_get_contents($url);
+		$res = json_decode($result,true);
+		if (isset($res['access_token'])){
+			setcookie('accessToken',$res['access_token'],7100);
+			echo 'success';
+			return $res['access_token'];
+		}else{
+			error_log($result,3,'../log/log.log');
+			echo 'fail';
+			return '';
+		}
+		}
+		
+	}
+	
+	
 ?>
